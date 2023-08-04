@@ -47,31 +47,38 @@ if check_password():
 
     def get_input():
         input_type = st.selectbox("Select input type", ["Text","Link", "File"])
+        temperature = st.slider("Set the temperature:", min_value=0.0, max_value=1.0, step=0.1)
+        tone = st.checkbox("Tone")
+        voice = st.checkbox("Voice")
+        vocabulary = st.checkbox("Vocabulary")
+        sentence_structure = st.checkbox("Sentence structure")
+        options = [option for option, checked in {"tone": tone, "voice": voice, "vocabulary": vocabulary, "sentence structure": sentence_structure}.items() if checked]
         if input_type == 'Text':
-            return st.text_area("Enter the text:"), input_type
+            return st.text_area("Enter the Example text:"), input_type, temperature, options
         elif input_type == "File":
             uploaded_file = st.file_uploader("Upload a file:")
             if uploaded_file:
                 text = uploaded_file.read().decode('utf-8')
-                return text, input_type
+                return text, input_type, temperature, options
             else:
-                return None, input_type
+                return None, input_type, temperature, options
         elif input_type == "Link":
             link = st.text_input("Enter the link:")
             if link:
                 text = fetch_content_from_link(link)
                 print(text)
-                return text, input_type
+                return text, input_type, temperature, options
             else:
-                return None, input_type
-        
+                return None, input_type, temperature, options
+            
 
     def get_prompt():
         return st.text_input("Write an article about: ")
 
-    def send_to_openai_api(input_data, input_type, prompt):
+    def send_to_openai_api(input_data, input_type, prompt, temperature, options):
         # Process input_data and send it to OpenAI API using the prompt
-        custom_instruction = f"in the style of the provided example, capturing it's tone, voice, vocabulary and sentence structure. Example: {input_data}"
+        options_string = ", ".join(options)
+        custom_instruction = f"] in the style of the provided example, capturing its {options_string}. Example: {input_data}"
         full_prompt = f"{prompt}\n {custom_instruction}\n"
 
         response = openai.ChatCompletion.create(
@@ -81,7 +88,7 @@ if check_password():
                 ],
             n=1,
             stop=None,
-            temperature=1,
+            temperature=temperature,
         )
 
         # Return the AI-generated text
@@ -89,15 +96,15 @@ if check_password():
 
     def main():
         st.title("WriteLikeMe!")
-        input_data, input_type = get_input()
+        input_data, input_type, temperature, options = get_input()
         prompt = "Write an article about: " + get_prompt()
-        
+
         previous_outputs = []
         if "previous_outputs" in st.session_state:
             previous_outputs = st.session_state.previous_outputs
 
         if st.button("Submit"):
-            ai_response = send_to_openai_api(input_data, input_type, prompt)
+            ai_response = send_to_openai_api(input_data, input_type, prompt, temperature, options)
             st.write(ai_response)
             previous_outputs.append(ai_response)
             st.session_state.previous_outputs = previous_outputs
