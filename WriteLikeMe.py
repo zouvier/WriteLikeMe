@@ -67,17 +67,17 @@ if check_password():
         
 
     def get_prompt():
-        return st.text_input("Enter the prompt:")
+        return st.text_input("Write an article about: ")
 
     def send_to_openai_api(input_data, input_type, prompt):
         # Process input_data and send it to OpenAI API using the prompt
-        custom_instruction = f"Use the following {input_type.lower()} as a reference to learn my writting style: {input_data} \n\n"
-        full_prompt = f"{custom_instruction}\n{prompt}"
+        custom_instruction = f"in the style of the provided example, capturing it's tone, voice, vocabulary and sentence structure. Example: {input_data}"
+        full_prompt = f"{prompt}\n {custom_instruction}\n"
 
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": full_prompt}
                 ],
             n=1,
             stop=None,
@@ -90,7 +90,7 @@ if check_password():
     def main():
         st.title("WriteLikeMe!")
         input_data, input_type = get_input()
-        prompt = "respond to the following using my writting style: " + get_prompt()
+        prompt = "Write an article about: " + get_prompt()
         
         previous_outputs = []
         if "previous_outputs" in st.session_state:
