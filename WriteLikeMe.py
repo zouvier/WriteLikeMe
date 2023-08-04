@@ -81,7 +81,7 @@ if check_password():
                 ],
             n=1,
             stop=None,
-            temperature=0.7,
+            temperature=1,
         )
 
         # Return the AI-generated text
